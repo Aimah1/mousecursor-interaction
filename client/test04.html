@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>test4</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; cursor: none; overflow: hidden;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 10;
+      transform: translate(-50%, -50%);
+    }
+
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="woodCanvas"></canvas>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    const canvas = document.getElementById('woodCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    let hack = false;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    
+    const img = new Image();
+    img.src = 'https://www.savokusic.com/media/wysiwyg/defekter-av-trae.webp'; 
+    img.crossOrigin = "anonymous";
+
+    img.onload = function() {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    }
+
+    function getBrightness(x, y) {
+      const pixel = ctx.getImageData(x, y, 1, 1).data;
+      const r = pixel[0];
+      const g = pixel[1];
+      const b = pixel[2];
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b; 
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+
+     
+      const brightness = getBrightness(targetX, targetY);
+      hack = brightness < 60; 
+    });
+
+    function animate() {
+      let dx = targetX - currentX;
+      let dy = targetY - currentY;
+
+      if (hack) {
+      
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+          currentX += Math.sign(dx) * 1.5; 
+          currentY += Math.sign(dy) * 1.5;
+        }
+      } else {
+        currentX += dx * 0.15;
+        currentY += dy * 0.15;
+      }
+
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

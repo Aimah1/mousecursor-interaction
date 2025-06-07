@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Muspekare rutor</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: white;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    #follower {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    #imageContainer {
+      position: absolute;
+      width: 400px;
+      height: 600px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-image: url('guld.jpg');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .colorBox {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="imageContainer"></div>
+  <div id="follower"></div>
+
+  <script>
+    const follower = document.getElementById("follower");
+    const imageContainer = document.getElementById("imageContainer");
+
+    const rows = 8;
+    const cols = 4;
+
+    const boxWidth = 400 / cols;
+    const boxHeight = 600 / rows;
+
+    const colorBoxes = [];
+    const colors = [];
+
+    for (let i = 0; i < rows * cols; i++) {
+      const hue = Math.floor((360 / (rows * cols)) * i);
+      colors.push(`hsl(${hue}, 80%, 60%)`);
+    }
+
+    let colorIndex = 0;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const box = document.createElement("div");
+        box.classList.add("colorBox");
+        box.style.width = `${boxWidth}px`;
+        box.style.height = `${boxHeight}px`;
+        box.style.left = `${col * boxWidth}px`;
+        box.style.top = `${row * boxHeight}px`;
+        box.style.backgroundColor = colors[colorIndex % colors.length];
+
+        const isSlow = colorIndex % 2 === 0;
+        box.dataset.slow = isSlow ? "true" : "false";
+        box.dataset.id = colorIndex;
+
+        colorIndex++;
+        imageContainer.appendChild(box);
+        colorBoxes.push(box);
+      }
+    }
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+    let lastBoxId = null;
+
+    window.addEventListener("mousemove", (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+    });
+
+    function getBoxAtPosition(x, y) {
+      for (const box of colorBoxes) {
+        const rect = box.getBoundingClientRect();
+        if (
+          x >= rect.left &&
+          x <= rect.right &&
+          y >= rect.top &&
+          y <= rect.bottom
+        ) {
+          return box;
+        }
+      }
+      return null;
+    }
+
+    function animate() {
+      const currentBox = getBoxAtPosition(targetX, targetY);
+      const isSlow = currentBox && currentBox.dataset.slow === "true";
+
+      let dx = targetX - currentX;
+      let dy = targetY - currentY;
+
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      let speedFactor;
+      if (isSlow) {
+        speedFactor = 0.05; 
+      } else {
+        speedFactor = 0.15; 
+      }
+
+      if (currentBox && currentBox.dataset.id !== lastBoxId) {
+        
+        const jump = 6;
+        const angle = Math.atan2(dy, dx);
+        currentX -= Math.cos(angle) * jump;
+        currentY -= Math.sin(angle) * jump;
+        lastBoxId = currentBox.dataset.id;
+      }
+
+      if (dist > 0.5) {
+        currentX += dx * speedFactor;
+        currentY += dy * speedFactor;
+      }
+
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

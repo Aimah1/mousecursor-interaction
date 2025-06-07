@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>test12</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: white;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png'); 
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 1000;
+      transform: translate(-50%, -50%);
+    }
+
+    .black-zone {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background-color: black;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById("fakemouse");
+
+    
+    const numberOfLines = 13;
+    const blackZones = [];
+    const beigeZones = [];
+
+    for (let i = 0; i < numberOfLines; i++) {
+      const width = Math.floor(Math.random() * 20) + 5; 
+      const left = Math.floor(Math.random() * window.innerWidth);
+
+      const zone = document.createElement("div");
+      zone.classList.add("black-zone");
+      zone.style.left = `${left}px`;
+      zone.style.width = `${width}px`;
+      document.body.appendChild(zone);
+      blackZones.push(zone);
+    }
+
+    
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+    let lastMouseX = null;
+    let lastMouseY = null;
+    const stepSize = 5; 
+
+    function isInBeigeArea(x) {
+      
+      return !blackZones.some(zone => {
+        const rect = zone.getBoundingClientRect();
+        return x >= rect.left && x <= rect.right;
+      });
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      const insideBeige = isInBeigeArea(e.clientX);
+
+      if (insideBeige) {
+        if (lastMouseX !== null && lastMouseY !== null) {
+          let dx = e.clientX - lastMouseX;
+          let dy = e.clientY - lastMouseY;
+
+          if (dx !== 0 || dy !== 0) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const moveX = (dx / dist) * stepSize;
+            const moveY = (dy / dist) * stepSize;
+            currentX += moveX;
+            currentY += moveY;
+            follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+          }
+        }
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      } else {
+        targetX = e.clientX;
+        targetY = e.clientY;
+        lastMouseX = null;
+        lastMouseY = null;
+      }
+    });
+
+    function animate() {
+      if (!isInBeigeArea(targetX)) {
+        let dx = targetX - currentX;
+        let dy = targetY - currentY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 1) {
+          currentX += dx * 0.3;
+          currentY += dy * 0.3;
+          follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

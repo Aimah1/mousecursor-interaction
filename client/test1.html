@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Muspekarbild som följer musen</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      cursor: none; /* Dölj den riktiga muspekaren */
+      overflow: hidden;
+    }
+    #follower {
+      position: fixed;
+      width: 40px;    /* Anpassa efter din bild */
+      height: 40px;
+      background-image: url(mousecursor.png); /* Byt till din egen bild här! */
+      background-size: contain;
+      background-repeat: no-repeat;
+      pointer-events: none; /* Så att det inte blockerar klick */
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      will-change: transform;
+    }
+  </style>
+</head>
+<body>
+  <div id="follower"></div>
+
+  <script>
+    const follower = document.getElementById('follower');
+    let mouseX = 0, mouseY = 0;
+    let currentX = 0, currentY = 0;
+
+    window.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    function animate() {
+      currentX += (mouseX - currentX) * 0.15;
+      currentY += (mouseY - currentY) * 0.15;
+
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

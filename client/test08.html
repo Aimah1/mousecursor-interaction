@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Step-wise låtsas mus</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png'); /* din muspekarbild */
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+
+    #stepZone {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(255, 0, 0, 0.1);
+      border: 2px dashed red;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="stepZone"></div>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    const stepZone = document.getElementById('stepZone');
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    function isInsideStepZone(x, y) {
+      const rect = stepZone.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+    });
+
+    function animate() {
+      const inside = isInsideStepZone(targetX, targetY);
+      let dx = targetX - currentX;
+      let dy = targetY - currentY;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > 0) {
+        if (inside) {
+          // Step-wise: hoppa i små fasta steg
+          const stepSize = 8; // större = hackigare
+          currentX += Math.sign(dx) * Math.min(stepSize, Math.abs(dx));
+          currentY += Math.sign(dy) * Math.min(stepSize, Math.abs(dy));
+        } else {
+          // Smooth rörelse utanför
+          currentX += dx * 0.1;
+          currentY += dy * 0.1;
+        }
+
+        follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

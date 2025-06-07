@@ -1,0 +1,14 @@
+body, input, button, a {
+  cursor: none !important;
+}
+
+#follower {
+  width: 50px;
+  height: 50px;
+  background-color: rgb(226, 181, 75);
+  position: fixed; /* bättre än absolute för följa mus */
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%); /* Centrera cirkeln under muspekaren */
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>test5</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    .zone {
+      position: absolute;
+      width: 20%;
+      height: 50%;
+      box-sizing: border-box;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+
+  <div id="zonesContainer"></div>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    const zonesContainer = document.getElementById('zonesContainer');
+
+    const speeds = [];
+    const zones = [];
+
+    for (let i = 0; i < 10; i++) {
+      const div = document.createElement('div');
+      div.classList.add('zone');
+
+      
+      div.style.left = `${(i % 5) * 20}%`;
+      div.style.top = i < 5 ? '0%' : '50%';
+
+     
+      const isDark = i % 2 === 0;
+      div.style.backgroundColor = isDark ? '#8B0000' : '#FF9999';
+
+      speeds[i] = isDark ? 1.0 : 0.001;
+
+      zonesContainer.appendChild(div);
+      zones.push(div);
+    }
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    function getCurrentZone(x, y) {
+      for (let i = 0; i < zones.length; i++) {
+        const rect = zones[i].getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+    });
+
+    function animate() {
+      const zoneIndex = getCurrentZone(currentX, currentY);
+      const speed = zoneIndex !== -1 ? speeds[zoneIndex] : 0.2;
+
+      const dx = targetX - currentX;
+      const dy = targetY - currentY;
+
+      currentX += dx * speed;
+      currentY += dy * speed;
+
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

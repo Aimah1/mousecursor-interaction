@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8" />
+<title>Test fake mus</title>
+<style>
+  html, body {
+    margin: 0; height: 100%;
+    cursor: none;
+  }
+  #fakeCursor {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    background: red; 
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+  }
+</style>
+</head>
+<body>
+<div id="fakeCursor"></div>
+<script>
+  const fakeCursor = document.getElementById('fakeCursor');
+  window.addEventListener('mousemove', e => {
+    fakeCursor.style.left = e.clientX + 'px';
+    fakeCursor.style.top = e.clientY + 'px';
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>test9</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; overflow: hidden;
+      cursor: none; 
+      background: #eee;
+    }
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png'); 
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+    #slideZone {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      border: 3px solid #a00;
+      background: rgba(255, 0, 0, 0.15);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="slideZone"></div>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    const slideZone = document.getElementById('slideZone');
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+
+    let targetX = currentX;
+    let targetY = currentY;
+
+    let sliding = false;
+    let slideVelocity = {x: 0, y: 0};
+
+    function isInsideZone(x, y) {
+      const rect = slideZone.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (!sliding) {
+        targetX = e.clientX;
+        targetY = e.clientY;
+      }
+
+      if (isInsideZone(e.clientX, e.clientY) && !sliding) {
+        sliding = true;
+        slideVelocity.x = e.movementX || 5;
+        slideVelocity.y = e.movementY || 5;
+      }
+    });
+
+    function animate() {
+      if (sliding) {
+        currentX += slideVelocity.x;
+        currentY += slideVelocity.y;
+
+        if (!isInsideZone(currentX, currentY)) {
+          sliding = false;
+          slideVelocity.x = 0;
+          slideVelocity.y = 0;
+        }
+      } else {
+        const dx = targetX - currentX;
+        const dy = targetY - currentY;
+
+        currentX += dx * 0.05;
+        currentY += dy * 0.05;
+      }
+
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

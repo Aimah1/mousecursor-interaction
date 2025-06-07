@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Triangle Grid</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+    }
+    svg {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    polygon {
+      fill: silver;
+      stroke: #888;
+      stroke-width: 0.5;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+    polygon:hover {
+      fill: #ccc;
+    }
+  </style>
+</head>
+<body>
+  <svg id="triangleGrid"></svg>
+
+  <script>
+    const svg = document.getElementById('triangleGrid');
+    const rows = 10;
+    const cols = 10;
+    const size = 60; // triangle size
+
+    let idCounter = 0;
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const offsetX = col * size;
+        const offsetY = row * size;
+
+        const upward = (row + col) % 2 === 0;
+
+        const points = upward
+          ? `${offsetX},${offsetY + size} ${offsetX + size / 2},${offsetY} ${offsetX + size},${offsetY + size}`
+          : `${offsetX},${offsetY} ${offsetX + size / 2},${offsetY + size} ${offsetX + size},${offsetY}`;
+
+        const triangle = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        triangle.setAttribute("points", points);
+        triangle.setAttribute("data-id", idCounter++);
+        triangle.addEventListener("click", (e) => {
+          alert(`Triangle ID: ${triangle.getAttribute("data-id")}`);
+        });
+
+        svg.appendChild(triangle);
+      }
+    }
+  </script>
+</body>
+</html>

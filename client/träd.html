@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>Muspekare träd</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; cursor: none; overflow: hidden;
+    }
+
+    #surface {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      user-select: none;
+      pointer-events: none;
+      image-rendering: pixelated;
+    }
+
+    #follower {
+      position: fixed;
+      width: 40px; 
+      height: 40px;
+      background-image: url('mousecursor.png'); 
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+
+  <img id="surface" src="surface.png" alt="Surface" />
+
+  <div id="follower"></div>
+
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const follower = document.getElementById('follower');
+    const surface = document.getElementById('surface');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    let surfaceRect;
+    let isPaused = false;
+    let pauseDuration = 300; 
+    let pauseTimeout = null;
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    let wasOnDarkLine = false;
+    let cooldown = false;
+
+    surface.onload = () => {
+      surfaceRect = surface.getBoundingClientRect();
+      canvas.width = surface.naturalWidth;
+      canvas.height = surface.naturalHeight;
+      ctx.drawImage(surface, 0, 0, canvas.width, canvas.height);
+    };
+
+    function isDarkPixel(r, g, b, a) {
+      if (a === 0) return false;
+      return (r < 100 && g < 80 && b < 60);
+    }
+
+    function isOnDarkLine(x, y) {
+      if (!surfaceRect) return false;
+      let relativeX = Math.floor((x - surfaceRect.left) * (canvas.width / surfaceRect.width));
+      let relativeY = Math.floor((y - surfaceRect.top) * (canvas.height / surfaceRect.height));
+      if (relativeX < 0 || relativeY < 0 || relativeX >= canvas.width || relativeY >= canvas.height) {
+        return false;
+      }
+      let pixel = ctx.getImageData(relativeX, relativeY, 1, 1).data;
+      return isDarkPixel(pixel[0], pixel[1], pixel[2], pixel[3]);
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (isPaused) return;
+
+      targetX = e.clientX;
+      targetY = e.clientY;
+
+      const currentlyOnDark = isOnDarkLine(targetX, targetY);
+
+      if (currentlyOnDark && !wasOnDarkLine && !cooldown) {
+        
+        isPaused = true;
+        cooldown = true;
+
+        pauseTimeout = setTimeout(() => {
+          isPaused = false;
+          
+          setTimeout(() => {
+            cooldown = false;
+          }, 200);
+        }, pauseDuration);
+      }
+
+      wasOnDarkLine = currentlyOnDark;
+    });
+
+    function animate() {
+      if (!isPaused) {
+        let dx = targetX - currentX;
+        let dy = targetY - currentY;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > 1) {
+          currentX += dx * 0.3;
+          currentY += dy * 0.3;
+        } else {
+          currentX = targetX;
+          currentY = targetY;
+        }
+
+        follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+      }
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

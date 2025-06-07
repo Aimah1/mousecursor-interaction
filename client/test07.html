@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>test7</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      cursor: none;
+      overflow: hidden;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png'); 
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    #stepZone {
+      position: absolute;
+      width: 300px;
+      height: 300px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 2px dashed red;
+      background-color: rgba(255, 0, 0, 0.05);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="stepZone"></div>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById("fakemouse");
+    const stepZone = document.getElementById("stepZone");
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+
+    let targetX = currentX;
+    let targetY = currentY;
+
+    let lastMouseX = null;
+    let lastMouseY = null;
+
+    const stepSize = 10; 
+
+    function isInsideZone(x, y) {
+      const rect = stepZone.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    window.addEventListener("mousemove", (e) => {
+      const inside = isInsideZone(e.clientX, e.clientY);
+
+      if (inside) {
+        if (lastMouseX !== null && lastMouseY !== null) {
+          let dx = e.clientX - lastMouseX;
+          let dy = e.clientY - lastMouseY;
+
+          if (dx !== 0 || dy !== 0) {
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const moveX = (dx / dist) * stepSize;
+            const moveY = (dy / dist) * stepSize;
+
+            currentX += moveX;
+            currentY += moveY;
+            follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+          }
+        }
+        lastMouseX = e.clientX;
+        lastMouseY = e.clientY;
+      } else {
+        targetX = e.clientX;
+        targetY = e.clientY;
+        lastMouseX = null;
+        lastMouseY = null;
+      }
+    });
+
+    function animate() {
+      if (!isInsideZone(targetX, targetY)) {
+        let dx = targetX - currentX;
+        let dy = targetY - currentY;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > 1) {
+          currentX += dx * 0.3;
+          currentY += dy * 0.3;
+          follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

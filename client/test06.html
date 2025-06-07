@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>test6</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url('mousecursor.png'); 
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+    }
+
+    #speedZone {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(255, 0, 0, 0.1);
+      border: 2px dashed rgb(238, 12, 0);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="speedZone"></div>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    const speedZone = document.getElementById('speedZone');
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    function isInsideSpeedZone(x, y) {
+      const rect = speedZone.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+    });
+
+    function animate() {
+      const insideZone = isInsideSpeedZone(targetX, targetY);
+      const speed = insideZone ? 1.6 : 0.1; 
+
+      let dx = targetX - currentX;
+      let dy = targetY - currentY;
+      currentX += dx * speed;
+      currentY += dy * speed;
+
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

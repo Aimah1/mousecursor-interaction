@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>surface test</title>
+  <style>
+    body {
+      margin: 0;
+      background: #111;
+      cursor: none;
+    }
+    svg {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+    }
+    polygon {
+      stroke: #222;
+      stroke-width: 0.5;
+    }
+    .fake-cursor {
+      position: fixed;
+      width: 75px;
+      height: 75px;
+      background-size: cover;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+
+<svg id="triangleGrid" xmlns="http://www.w3.org/2000/svg"></svg>
+<div class="fake-cursor" id="fakeCursor"></div>
+
+<script>
+  const svg = document.getElementById('triangleGrid');
+  const triangleSize = 100;
+  const rows = Math.ceil(window.innerHeight / (triangleSize * Math.sqrt(3) / 2));
+  const cols = Math.ceil(window.innerWidth / (triangleSize / 2));
+  const cursorImages = [
+    "mouserak.png",
+    "mousevänsterner.png",
+    "mouseupp.png",
+    "mouse sida upp.png",
+    "mousevänsterner.png"
+  ];
+
+  const fakeCursor = document.getElementById('fakeCursor');
+  let lastTriangleId = null;
+  let lastImageIndex = -1;
+  const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+  svg.appendChild(defs);
+
+  const triangleElements = [];
+  let idCounter = 0;
+
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const isUpward = (row + col) % 2 === 0;
+      const x = col * (triangleSize / 2);
+      const y = row * (triangleSize * Math.sqrt(3) / 2);
+
+      let points;
+      if (isUpward) {
+        points = `
+          ${x},${y + triangleSize * Math.sqrt(3) / 2}
+          ${x + triangleSize / 2},${y}
+          ${x + triangleSize},${y + triangleSize * Math.sqrt(3) / 2}
+        `;
+      } else {
+        points = `
+          ${x},${y}
+          ${x + triangleSize / 2},${y + triangleSize * Math.sqrt(3) / 2}
+          ${x + triangleSize},${y}
+        `;
+      }
+
+      const gradId = `grad-${idCounter}`;
+      const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+      gradient.setAttribute("id", gradId);
+      gradient.setAttribute("x1", "0%");
+      gradient.setAttribute("y1", "0%");
+      gradient.setAttribute("x2", "100%");
+      gradient.setAttribute("y2", "100%");
+
+      const brightness = Math.floor(Math.random() * 60) + 40;
+      const dark = `hsl(0, 0%, ${brightness}%)`;
+      const light = `hsl(0, 0%, ${brightness + 20}%)`;
+
+      const stop1 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+      stop1.setAttribute("offset", "0%");
+      stop1.setAttribute("stop-color", light);
+      const stop2 = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+      stop2.setAttribute("offset", "100%");
+      stop2.setAttribute("stop-color", dark);
+      gradient.appendChild(stop1);
+      gradient.appendChild(stop2);
+      defs.appendChild(gradient);
+
+      const triangle = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      triangle.setAttribute("points", points.trim());
+      triangle.setAttribute("data-id", idCounter);
+      triangle.setAttribute("fill", `url(#${gradId})`);
+
+      svg.appendChild(triangle);
+      triangleElements.push({ id: idCounter, element: triangle, points: points.trim() });
+      idCounter++;
+    }
+  }
+
+  function pointInPolygon(px, py, points) {
+    const pts = points.trim().split(/\s+/).map(p => {
+      const [x, y] = p.split(',').map(Number);
+      return { x, y };
+    });
+    const [A, B, C] = pts;
+    const area = Math.abs((A.x*(B.y - C.y) + B.x*(C.y - A.y) + C.x*(A.y - B.y)) / 2);
+    const area1 = Math.abs((px*(B.y - C.y) + B.x*(C.y - py) + C.x*(py - B.y)) / 2);
+    const area2 = Math.abs((A.x*(py - C.y) + px*(C.y - A.y) + C.x*(A.y - py)) / 2);
+    const area3 = Math.abs((A.x*(B.y - py) + B.x*(py - A.y) + px*(A.y - B.y)) / 2);
+    return Math.abs(area - (area1 + area2 + area3)) < 0.5;
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    fakeCursor.style.left = `${e.clientX}px`;
+    fakeCursor.style.top = `${e.clientY}px`;
+
+    const mouseX = e.clientX;
+    const mouseY = e.clientY;
+
+    for (const tri of triangleElements) {
+      if (pointInPolygon(mouseX, mouseY, tri.points)) {
+        if (tri.id !== lastTriangleId) {
+          lastTriangleId = tri.id;
+
+          let newIndex;
+          do {
+            newIndex = Math.floor(Math.random() * cursorImages.length);
+          } while (newIndex === lastImageIndex && cursorImages.length > 1);
+
+          lastImageIndex = newIndex;
+          const img = cursorImages[newIndex];
+          fakeCursor.style.backgroundImage = `url('${img}?v=${Date.now()}')`; 
+        }
+        break;
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

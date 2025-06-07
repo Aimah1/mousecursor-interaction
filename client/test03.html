@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>test3</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; cursor: none; overflow: hidden;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 40px; 
+      height: 40px;
+      background-image: url('mousecursor.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    #freezeZone {
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: rgba(255, 0, 0, 0.15);
+      border: 2px dashed red;
+      top: 50%; 
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="freezeZone"></div>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    const freezeZone = document.getElementById('freezeZone');
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+
+    let frozen = false;
+    let fingerLifted = true; 
+    let lastMoveTime = 0;
+    let smallMoveDone = false;
+
+    function isInsideFreezeZone(x, y) {
+      const rect = freezeZone.getBoundingClientRect();
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    function isInsideInnerZone(x, y) {
+      const rect = freezeZone.getBoundingClientRect();
+      const padding = 20; // 2cm approx
+      return x >= rect.left + padding &&
+             x <= rect.right - padding &&
+             y >= rect.top + padding &&
+             y <= rect.bottom - padding;
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      const now = Date.now();
+      lastMoveTime = now;
+
+      if (frozen) {
+        if (fingerLifted) {
+          if (!smallMoveDone) {
+            let dx = e.clientX - currentX;
+            let dy = e.clientY - currentY;
+            let dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > 0) {
+              const maxMove = 25;
+              const moveDist = Math.min(dist, maxMove);
+              const moveX = (dx / dist) * moveDist;
+              const moveY = (dy / dist) * moveDist;
+
+              currentX += moveX;
+              currentY += moveY;
+
+              follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+
+              smallMoveDone = true;
+            }
+          }
+          return;
+        }
+        return;
+      }
+
+      targetX = e.clientX;
+      targetY = e.clientY;
+
+      if (isInsideInnerZone(e.clientX, e.clientY)) {
+        frozen = true;
+        fingerLifted = false;
+        smallMoveDone = false;
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (frozen && !isInsideInnerZone(e.clientX, e.clientY)) {
+        frozen = false;
+        fingerLifted = true;
+        smallMoveDone = false;
+      }
+    });
+
+    setInterval(() => {
+      if (Date.now() - lastMoveTime > 300) {
+        fingerLifted = true;
+        smallMoveDone = false;
+      }
+    }, 100);
+
+    function animate() {
+      if (!frozen) {
+        let dx = targetX - currentX;
+        let dy = targetY - currentY;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 1) {
+          currentX = targetX;
+          currentY = targetY;
+        } else {
+          
+          if (isInsideInnerZone(currentX, currentY)) {
+            currentX += dx * 0.05;  
+            currentY += dy * 0.05;
+          } else {
+            currentX += dx * 0.3;   
+            currentY += dy * 0.3;
+          }
+        }
+
+        follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>

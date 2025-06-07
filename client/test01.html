@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <title>test01</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      cursor: none; 
+    }
+
+   
+    #slowZone {
+      position: fixed;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 0, 0, 0.15);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border: 2px dashed red;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+   
+    #fakemouse {
+      position: fixed;
+      width: 40px;
+      height: 40px;
+      background-image: url(mousecursor.png); 
+      background-size: contain;
+      background-repeat: no-repeat;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <div id="slowZone"></div>
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    const slowZone = document.getElementById('slowZone');
+
+    let mouseX = 0, mouseY = 0;
+    let currentX = 0, currentY = 0;
+
+    const normalSpeed = 0.2;
+    const slowSpeed = 0.05;
+
+    window.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+
+    function animate() {
+      const rect = slowZone.getBoundingClientRect();
+      const insideSlowZone = (
+        currentX >= rect.left &&
+        currentX <= rect.right &&
+        currentY >= rect.top &&
+        currentY <= rect.bottom
+      );
+
+      const speed = insideSlowZone ? slowSpeed : normalSpeed;
+
+      currentX += (mouseX - currentX) * speed;
+      currentY += (mouseY - currentY) * speed;
+
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

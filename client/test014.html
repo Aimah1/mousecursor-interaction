@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>test14</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    body {
+      background-image: url('guld.jpg'); 
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+
+    #fakemouse {
+      position: fixed;
+      width: 450px;
+      height: 450px;
+      background-image: url('finger.png'); 
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+    }
+
+    .hack-box {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background-color: rgba(249, 243, 243, 0); 
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="fakemouse"></div>
+
+  <script>
+    const follower = document.getElementById('fakemouse');
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+    let targetX = currentX;
+    let targetY = currentY;
+    let lastX = currentX;
+    let lastY = currentY;
+
+    
+    const numBoxes = 19;
+    const boxes = [];
+    for (let i = 0; i < numBoxes; i++) {
+      const box = document.createElement('div');
+      box.classList.add('hack-box');
+      box.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+      box.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+      document.body.appendChild(box);
+      boxes.push(box);
+    }
+
+    function isInsideBox(x, y) {
+      for (let box of boxes) {
+        const rect = box.getBoundingClientRect();
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      targetX = e.clientX;
+      targetY = e.clientY;
+
+      const dx = targetX - lastX;
+      const dy = targetY - lastY;
+
+      if (isInsideBox(targetX, targetY)) {
+        
+        const magnitude = Math.sqrt(dx * dx + dy * dy);
+        if (magnitude > 0) {
+          const bounceX = (-dx / magnitude) * 3;
+          const bounceY = (-dy / magnitude) * 3;
+          currentX += bounceX;
+          currentY += bounceY;
+        }
+      } else {
+        currentX += (targetX - currentX) * 0.1;
+        currentY += (targetY - currentY) * 0.1;
+      }
+
+      lastX = targetX;
+      lastY = targetY;
+    });
+
+    function animate() {
+      follower.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
+</body>
+</html>
